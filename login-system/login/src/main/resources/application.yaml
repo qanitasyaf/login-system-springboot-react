@@ -13,9 +13,9 @@ spring:
     platform: postgres
     url: jdbc:postgresql://localhost:5432/app
     username: postgres
-    password: *********
+    password: 123456
     driverClassName: org.postgresql.Driver
-    webmvc:
+  webmvc:
       cors:
         allowed-origins: "http://localhost:3000"
 
