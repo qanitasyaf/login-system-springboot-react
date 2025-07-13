@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/VincenzoC26/login-system-springboot-react'
+                git branch: 'main', url: 'https://github.com/qanitasyaf/login-system-springboot-react'
             }
         }
 
