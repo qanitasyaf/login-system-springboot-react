@@ -1,21 +1,22 @@
+# login-system/login/src/main/resources/application.yml
+
 server:
   port: 9090
   error:
     include-message: always
 
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
   jpa:
+    database: POSTGRESQL
+    show-sql: true
     hibernate:
-      ddl-auto: update # or create-drop
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+      ddl-auto: create-drop
+  datasource:
+    platform: postgres
+    url: jdbc:postgresql://localhost:5432/app
+    username: postgres
+    password: 123456 
+    driverClassName: org.postgresql.Driver # <--- THIS MUST BE org.postgresql.Driver
   webmvc:
-      cors:
-        allowed-origins: "http://localhost:3000"
-
+    cors:
+      allowed-origins: "http://localhost:3000"
