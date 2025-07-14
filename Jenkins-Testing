@@ -1,0 +1,129 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven 3.8.8'
+        nodejs 'NodeJS'
+        jdk 'Temurin JDK 17'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // The repository contents will be cloned directly into the workspace root.
+                // For example, if workspace is /var/jenkins_home/workspace/my-job,
+                // the repo contents (like 'login-system/') will be directly in /var/jenkins_home/workspace/my-job/
+                git branch: 'main', url: 'https://github.com/qanitasyaf/login-system-springboot-react'
+            }
+        }
+
+        stage('Build Frontend (React)') {
+            steps {
+                // Corrected path: Now directly refer to 'login-system' as it's in the workspace root.
+                dir('login-system/login-system-frontend') {
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Build Backend (Spring Boot)') {
+            steps {
+                // Corrected path: Now directly refer to 'login-system' as it's in the workspace root.
+                dir('login-system/login') {
+                    sh 'java -version'
+                    sh 'mvn clean package -DskipTests'
+                }
+            }
+        }
+
+        stage('Unit Test & Coverage') {
+            steps {
+                // Corrected path: Now directly refer to 'login-system' as it's in the workspace root.
+                dir('login-system/login') {
+                    sh 'mvn test'
+                }
+            }
+            post {
+                always {
+                    // Corrected path: Now directly refer to 'login-system' as it's in the workspace root.
+                    junit 'login-system/login/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('Static Code Analysis (SAST) via Sonar') {
+            steps {
+                // Corrected path: Now directly refer to 'login-system' as it's in the workspace root.
+                dir('login-system/login') {
+                    sh """
+                    mvn clean verify sonar:sonar \\
+                    -Dsonar.projectKey=mentoring-task \\
+                    -Dsonar.projectName='mentoring-task' \\
+                    -Dsonar.host.url=http://sonarqube:9000 \\
+                    -Dsonar.token=sqp_43e91e31ca27094009f34b720c1319588b1d6e68
+                    """
+                }
+            }
+        }
+
+        stage('Copy Frontend to Backend Static Resources') {
+            steps {
+                script {
+                    echo "Current working directory before mkdir/cp:"
+                    sh 'pwd'
+                    echo "Listing contents of workspace root:"
+                    sh 'ls -l'
+                    echo "Listing contents of login-system directory:"
+                    sh 'ls -l login-system/'
+                    echo "Attempting to create target directory..."
+                    // Corrected path: Now directly refer to 'login-system' as it's in the workspace root.
+                    sh 'mkdir -p login-system/login/src/main/resources/static'
+                    echo "Verifying target directory creation:"
+                    // Corrected path: Now directly refer to 'login-system' as it's in the workspace root.
+                    sh 'ls -ld login-system/login/src/main/resources/static'
+                    echo "Attempting to copy frontend build..."
+                    // Corrected paths for cp command
+                    sh 'cp -r login-system/login-system-frontend/build/* login-system/login/src/main/resources/static/'
+                    echo "Copied React build to Spring Boot static resources."
+                }
+            }
+        }
+
+        stage('Package Final JAR with Frontend') {
+            steps {
+                // Corrected path: Now directly refer to 'login-system' as it's in the workspace root.
+                dir('login-system/login') {
+                    sh 'mvn clean package'
+                }
+            }
+        }
+
+        stage('Run Application (Temporary - Job will hang!)') {
+            steps {
+                script {
+                    // Corrected path: Now directly refer to 'login-system' as it's in the workspace root.
+                    def jarFile = findFiles(glob: 'login-system/login/target/*.jar')[0]
+                    if (jarFile) {
+                        echo "Running Spring Boot application: ${jarFile.name} on port 8085"
+                        sh "java -jar ${jarFile.path} -Dserver.port=8085"
+                    } else {
+                        error "JAR file not found!"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline finished successfully! 🚀'
+        }
+        failure {
+            echo 'Pipeline failed! 💥'
+        }
+    }
+}

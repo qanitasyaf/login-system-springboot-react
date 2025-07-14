@@ -27,7 +27,7 @@ pipeline {
             steps {
                 dir('login-system/login') {
                     sh 'java -version'
-                    sh 'mvn clean package -DskipTests' 
+                    sh 'mvn clean package -DskipTests'
                 }
             }
         }
@@ -35,7 +35,7 @@ pipeline {
         stage('Unit Test & Coverage') {
             steps {
                 dir('login-system/login') {
-                    sh 'mvn test' 
+                    sh 'mvn test'
                 }
             }
             post {
@@ -47,23 +47,21 @@ pipeline {
 
         stage('Static Code Analysis (SAST) via Sonar') {
             steps {
-                dir('login-system/login') {
+                dir ('login-system/login') {
                     sh """
-                    mvn clean verify sonar:sonar \\
-                    -Dsonar.projectKey=mentoring-task \\
-                    -Dsonar.projectName='mentoring-task' \\
-                    -Dsonar.host.url=http://sonarqube:9000 \\
+                    mvn clean verify sonar:sonar \
+                    -Dsonar.projectKey=mentoring-task \
+                    -Dsonar.projectName='mentoring-task' \
+                    -Dsonar.host.url=http://sonarqube:9000 \
                     -Dsonar.token=sqp_43e91e31ca27094009f34b720c1319588b1d6e68
                     """
-                }
             }
         }
-
-    } 
+    }
 
     post {
         always {
-            cleanWs() 
+            cleanWs()
         }
         success {
             echo 'Pipeline finished successfully! 🚀'
@@ -72,4 +70,5 @@ pipeline {
             echo 'Pipeline failed! 💥'
         }
     }
+}
 }
